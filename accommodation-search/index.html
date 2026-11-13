@@ -142,6 +142,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 
   <section class="outlinks panel" aria-label="실제 예약 사이트">
     <h3>실제 예약 사이트에서 찾기 (현재 조건 그대로)</h3>
+    <p class="nights" style="margin:0">1박 최대 가격은 부킹닷컴·에어비앤비에 함께 적용돼요. 네이버·구글은 가격 조건을 받지 않아서 사이트에서 한 번 더 골라 주세요.</p>
     <div class="linkrow" id="outLinks"></div>
   </section>
 </div>
@@ -230,11 +231,14 @@ function place(){return S.q.trim()||(S.region!=="전체"?S.region:"국내")}
 function links(name){
   const where=name||place();const t=S.type!=="전체"?S.type.replace("·"," "):"숙소";
   const ci=$("checkin").value,co=$("checkout").value,g=S.guests;
-  const e=encodeURIComponent;
+  const e=encodeURIComponent;const mp=S.maxPrice;
+  const bkPrice=mp?`&selected_currency=KRW&nflt=${e("price=KRW-0-"+mp+"-1")}`:"";
+  const abPrice=mp?`&currency=KRW&price_max=${mp}&price_filter_num_nights=1`:"";
+  const nvPrice=mp?" "+(mp/10000)+"만원 이하":"";
   return [
-    ["네이버에서 검색",`https://search.naver.com/search.naver?query=${e(where+" "+(name?"":t))}`,true],
-    ["부킹닷컴",`https://www.booking.com/searchresults.ko.html?ss=${e(where)}&checkin=${ci}&checkout=${co}&group_adults=${g}&no_rooms=1`],
-    ["에어비앤비",`https://www.airbnb.co.kr/s/${e(where)}/homes?checkin=${ci}&checkout=${co}&adults=${g}`],
+    ["네이버에서 검색",`https://search.naver.com/search.naver?query=${e(where+" "+(name?"":t)+nvPrice)}`,true],
+    ["부킹닷컴"+(mp?" (가격 적용)":""),`https://www.booking.com/searchresults.ko.html?ss=${e(where)}&checkin=${ci}&checkout=${co}&group_adults=${g}&no_rooms=1${bkPrice}`],
+    ["에어비앤비"+(mp?" (가격 적용)":""),`https://www.airbnb.co.kr/s/${e(where)}/homes?checkin=${ci}&checkout=${co}&adults=${g}${abPrice}`],
     ["구글 호텔",`https://www.google.com/travel/search?q=${e(where+" "+t)}&hl=ko`]
   ].map(([l,u,p])=>`<a class="ext${p?" primary":""}" href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join("");
 }
