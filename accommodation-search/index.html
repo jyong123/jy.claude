@@ -1,0 +1,294 @@
+<title>쉼표 숙소찾기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Sans+KR:wght@500;700&display=swap">
+<style>
+/* 레이아웃: 모바일 한 열 앱. 상단 검색 패널 → 필터 칩 → 결과 카드 목록 → 하단 상세 시트 */
+:root{
+  --bg:#EEF2F1; --surface:#FFFFFF; --surface-2:#F6F8F7; --fg:#14211E; --muted:#5E6E6A; --line:#D8E0DE;
+  --accent:#0E6B5C; --accent-soft:#D6EDE8; --accent-fg:#FFFFFF; --warm:#D9822B; --heart:#D94467;
+  --font-body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --font-display:"IBM Plex Sans KR","Noto Sans KR",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1513; --surface:#17211E; --surface-2:#1E2A27; --fg:#E6EEEC; --muted:#93A5A0; --line:#2B3936;
+  --accent:#4CC2A8; --accent-soft:#1D3A34; --accent-fg:#0B1A16; --warm:#F0A55A; --heart:#F07A95; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1513; --surface:#17211E; --surface-2:#1E2A27; --fg:#E6EEEC; --muted:#93A5A0; --line:#2B3936;
+  --accent:#4CC2A8; --accent-soft:#1D3A34; --accent-fg:#0B1A16; --warm:#F0A55A; --heart:#F07A95; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:-.02em;display:flex;align-items:baseline;gap:6px}
+.logo b{color:var(--accent)}
+.logo small{font-family:var(--font-body);font-weight:500;font-size:12px;color:var(--muted);letter-spacing:0}
+.iconbtn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.iconbtn[aria-pressed="true"]{background:var(--heart);border-color:var(--heart);color:#fff}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+input[type=text],input[type=date],select{width:100%;font:inherit;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrapchips{flex-wrap:wrap;overflow:visible}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);border-radius:999px;padding:7px 13px;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;min-height:44px;padding:4px}
+.stepper button{width:36px;height:36px;border-radius:8px;border:0;background:var(--surface);color:var(--fg);font-size:20px;cursor:pointer;line-height:1}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{font-weight:700;font-variant-numeric:tabular-nums}
+.nights{font-size:12.5px;color:var(--muted)}
+.notice{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
+.notice strong{color:var(--fg)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.count{font-weight:700}
+.count span{color:var(--accent)}
+.toolbar select{width:auto;min-height:38px;padding:6px 10px;font-size:13.5px}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid;grid-template-columns:116px 1fr;cursor:pointer;text-align:left;font:inherit;color:inherit;padding:0;width:100%}
+.thumb{position:relative;min-height:128px;display:flex;align-items:flex-end;padding:8px}
+.thumb .t{font-family:var(--font-display);font-weight:700;font-size:12px;color:#fff;background:rgba(0,0,0,.28);border-radius:6px;padding:2px 7px}
+.thumb svg{position:absolute;inset:0;width:100%;height:100%}
+.body{padding:11px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.name{font-weight:700;font-size:15.5px;line-height:1.3;text-wrap:balance}
+.fav{border:0;background:none;padding:2px;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;flex:none}
+.fav[aria-pressed="true"]{color:var(--heart)}
+.meta{font-size:12.5px;color:var(--muted)}
+.rating{font-size:12.5px;font-weight:700;color:var(--warm)}
+.rating span{color:var(--muted);font-weight:400}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:11.5px;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:1px 6px;font-weight:500}
+.price{margin-top:auto;display:flex;align-items:baseline;justify-content:flex-end;gap:6px;font-variant-numeric:tabular-nums}
+.price b{font-size:17px;font-family:var(--font-display)}
+.price small{font-size:11.5px;color:var(--muted)}
+.empty{text-align:center;padding:30px 16px;color:var(--muted);background:var(--surface);border-radius:var(--r);border:1px solid var(--line)}
+.empty b{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
+.outlinks{display:flex;flex-direction:column;gap:8px}
+.outlinks h3{margin:0;font-size:13px;color:var(--muted)}
+.linkrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ext{display:flex;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;font-weight:500;font-size:13.5px;min-height:44px}
+.ext.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+/* 상세 시트 */
+.scrim{position:fixed;inset:0;background:rgba(5,12,10,.5);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-height:88%;overflow-y:auto;background:var(--surface);border-radius:20px 20px 0 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:10px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.grab{width:40px;height:4px;background:var(--line);border-radius:4px;align-self:center}
+.hero{height:150px;border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:12px}
+.hero svg{position:absolute;inset:0;width:100%;height:100%}
+.hero .t{position:relative;font-family:var(--font-display);font-weight:700;color:#fff;background:rgba(0,0,0,.3);border-radius:8px;padding:3px 9px}
+.sheet h2{margin:0;font-family:var(--font-display);font-size:21px;line-height:1.3}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fact{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.fact small{display:block;font-size:11.5px;color:var(--muted)}
+.fact b{font-variant-numeric:tabular-nums}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px}
+.total b{font-size:20px;font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.close{position:absolute;right:10px;top:10px}
+.desc{margin:0;color:var(--fg)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="logo"><b>쉼표</b>숙소찾기 <small>지역·인원·종류로 한 번에</small></div>
+    <button class="iconbtn" id="favOnly" aria-pressed="false" type="button">♥ 찜 <span id="favCount">0</span></button>
+  </header>
+
+  <form class="panel" id="searchForm" autocomplete="off">
+    <div class="field">
+      <label class="label" for="q">지역 · 숙소명</label>
+      <input type="text" id="q" placeholder="예: 제주, 해운대, 한옥" enterkeyhint="search">
+      <div class="chips" id="regionChips" role="group" aria-label="지역 선택"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label class="label" for="checkin">체크인</label><input type="date" id="checkin"></div>
+      <div class="field"><label class="label" for="checkout">체크아웃</label><input type="date" id="checkout"></div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <span class="label">인원</span>
+        <div class="stepper"><button type="button" id="minus" aria-label="인원 줄이기">−</button><output id="guests">2명</output><button type="button" id="plus" aria-label="인원 늘리기">+</button></div>
+      </div>
+      <div class="field">
+        <label class="label" for="maxPrice">1박 최대 가격</label>
+        <select id="maxPrice">
+          <option value="0">상관없음</option><option value="50000">5만원 이하</option><option value="100000">10만원 이하</option>
+          <option value="150000">15만원 이하</option><option value="250000">25만원 이하</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">숙박 종류</span>
+      <div class="chips wrapchips" id="typeChips" role="group" aria-label="숙박 종류"></div>
+    </div>
+    <div class="nights" id="nightsInfo"></div>
+  </form>
+
+  <p class="notice"><strong>안내</strong> 목록의 숙소와 가격은 앱 동작을 보여주기 위한 <strong>예시 데이터</strong>예요. 실제 빈 방과 가격은 아래 ‘실제 예약 사이트에서 찾기’ 버튼으로 같은 조건 그대로 확인하세요.</p>
+
+  <div class="toolbar">
+    <div class="count" id="count"></div>
+    <select id="sort" aria-label="정렬">
+      <option value="rec">추천순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option><option value="rate">평점순</option>
+    </select>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <section class="outlinks panel" aria-label="실제 예약 사이트">
+    <h3>실제 예약 사이트에서 찾기 (현재 조건 그대로)</h3>
+    <div class="linkrow" id="outLinks"></div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden></div>
+
+<script>
+const TYPES=["호텔","리조트","펜션","모텔","게스트하우스","한옥","캠핑·글램핑"];
+const REGIONS=["서울","부산","제주","강릉","속초","여수","경주","전주","가평","인천"];
+// [이름, 지역, 동네, 종류, 1박가격, 최대인원, 평점, 리뷰수, 태그, 설명]
+const RAW=[
+["한강뷰 스테이 마포","서울","마포·합정","호텔",168000,3,4.6,1240,"한강뷰|조식|역세권","합정역 도보 4분. 고층 객실에서 한강과 양화대교가 보여요."],
+["을지로 루프 호텔","서울","을지로","호텔",132000,2,4.4,860,"루프탑|역세권","을지로3가역 앞. 루프탑 바에서 도심 야경을 볼 수 있어요."],
+["북촌 소담재","서울","종로·북촌","한옥",189000,4,4.8,410,"한옥체험|마당|조식","100년 된 한옥을 고친 독채. 아침에 전통 다과를 내드려요."],
+["홍대 문간 게스트하우스","서울","홍대","게스트하우스",38000,1,4.3,2210,"도미토리|공용주방","혼자 여행하는 분들이 많은 활기찬 숙소예요."],
+["강남 시티 모텔 S","서울","강남역","모텔",69000,2,4.2,3150,"스파|넷플릭스|주차","월풀 스파와 대형 TV가 있는 리모델링 객실."],
+["해운대 오션그랜드","부산","해운대","호텔",245000,4,4.7,2980,"오션뷰|수영장|조식","해변 바로 앞. 인피니티 풀에서 해운대 바다가 이어져요."],
+["광안리 브릿지뷰 스테이","부산","광안리","호텔",142000,3,4.5,1520,"광안대교뷰|역세권","객실 창으로 광안대교 야경이 정면에 보여요."],
+["기장 바다정원 펜션","부산","기장","펜션",158000,6,4.6,330,"바베큐|오션뷰|주차","바다 앞 복층 펜션. 테라스에서 바베큐 가능해요."],
+["서면 스테이 M","부산","서면","모텔",62000,2,4.1,1890,"역세권|주차","서면역 5분. 깔끔한 스탠다드 객실."],
+["영도 흰여울 게스트하우스","부산","영도","게스트하우스",45000,2,4.6,520,"오션뷰|공용라운지","흰여울문화마을 골목 안 작은 숙소."],
+["제주 함덕 선셋 리조트","제주","함덕","리조트",265000,4,4.8,1760,"오션뷰|수영장|키즈","에메랄드빛 함덕 해변 앞. 가족 여행에 좋아요."],
+["애월 돌담 독채","제주","애월","펜션",210000,5,4.7,620,"독채|마당|바베큐","돌담으로 둘러싼 제주 전통 가옥 스타일 독채."],
+["서귀포 숲속 글램핑","제주","서귀포","캠핑·글램핑",135000,4,4.5,480,"글램핑|바베큐|불멍","한라산 자락 숲속 텐트. 밤엔 별이 쏟아져요."],
+["제주시 공항 비즈 호텔","제주","제주시","호텔",79000,2,4.2,2640,"공항근처|주차","제주공항 차로 7분. 도착·출발일에 편해요."],
+["성산 일출 게스트하우스","제주","성산","게스트하우스",35000,1,4.4,990,"일출뷰|조식","성산일출봉이 보이는 루프탑에서 아침을 먹어요."],
+["중문 그랜드 리조트","제주","중문","리조트",320000,5,4.7,2100,"수영장|스파|키즈","중문관광단지 안. 실내외 수영장과 스파가 있어요."],
+["강릉 경포 오션 호텔","강릉","경포","호텔",176000,3,4.6,1340,"오션뷰|조식","경포해변 바로 앞 객실. 일출이 정면이에요."],
+["안목 커피거리 스테이","강릉","안목","펜션",128000,4,4.5,410,"오션뷰|주차","카페거리 한가운데. 바다 산책하기 좋아요."],
+["강릉 솔향 한옥","강릉","초당","한옥",155000,4,4.8,260,"한옥체험|마당","초당 순두부 마을 근처 고즈넉한 한옥."],
+["강릉역 시티 모텔","강릉","강릉역","모텔",58000,2,4.0,870,"역세권|주차","KTX 강릉역 도보 3분."],
+["속초 설악 마운틴 리조트","속초","설악","리조트",198000,5,4.6,1580,"마운틴뷰|온천|키즈","설악산 입구 근처. 온천 사우나가 있어요."],
+["속초 등대 게스트하우스","속초","동명동","게스트하우스",40000,2,4.5,730,"오션뷰|공용주방","속초 등대 아래 바다가 보이는 숙소."],
+["영랑호 감성 펜션","속초","영랑호","펜션",142000,4,4.4,350,"호수뷰|바베큐","영랑호 산책로 옆 조용한 펜션."],
+["여수 밤바다 호텔","여수","돌산","호텔",185000,3,4.7,1690,"오션뷰|루프탑","돌산대교와 여수 밤바다가 한눈에."],
+["여수 오동도 펜션","여수","오동도","펜션",139000,6,4.4,290,"오션뷰|바베큐|주차","단체 여행에 좋은 넓은 복층."],
+["여수 엑스포 모텔","여수","여수엑스포역","모텔",65000,2,4.1,760,"역세권|주차","여수엑스포역 도보 5분."],
+["경주 황리단길 한옥 스테이","경주","황리단길","한옥",172000,4,4.8,540,"한옥체험|마당|조식","황리단길 중심. 대릉원까지 걸어서 5분."],
+["보문호수 리조트","경주","보문","리조트",215000,5,4.5,1830,"호수뷰|수영장|키즈","보문호 산책로와 놀이공원이 가까워요."],
+["경주 첨성대 게스트하우스","경주","시내","게스트하우스",36000,2,4.3,620,"공용라운지|자전거대여","자전거 빌려 유적지 돌기 좋아요."],
+["전주 한옥마을 고택","전주","한옥마을","한옥",145000,4,4.7,880,"한옥체험|조식","전동성당 옆 고택. 아침상이 정갈해요."],
+["전주 객리단길 스테이","전주","객사","호텔",89000,2,4.3,410,"역세권|카페","객리단길 맛집들이 걸어서 2분."],
+["가평 북한강 풀빌라","가평","청평","펜션",290000,8,4.7,560,"개별수영장|바베큐|독채","개별 온수풀이 있는 강변 풀빌라."],
+["가평 잣나무숲 글램핑","가평","설악면","캠핑·글램핑",119000,4,4.5,720,"글램핑|바베큐|불멍","잣나무 숲 속 카라반과 글램핑 텐트."],
+["자라섬 오토캠핑 데크","가평","자라섬","캠핑·글램핑",45000,4,4.2,1100,"오토캠핑|전기","장비를 가져오는 캠핑족을 위한 데크 사이트."],
+["인천 송도 센트럴 호텔","인천","송도","호텔",138000,3,4.5,1450,"센트럴파크뷰|수영장","센트럴파크와 송도 야경이 보이는 호텔."],
+["영종도 공항 캡슐 스테이","인천","영종도","게스트하우스",42000,1,4.2,1980,"공항근처|24시간체크인","새벽 비행기 타기 전 하룻밤에 딱."],
+["을왕리 선셋 펜션","인천","을왕리","펜션",118000,4,4.3,380,"오션뷰|바베큐","해질녘 을왕리 노을이 테라스 앞에 있어요."],
+["부평 시티 모텔","인천","부평","모텔",55000,2,4.0,940,"역세권|주차","부평역 근처 깔끔한 숙소."]
+];
+const DATA=RAW.map((r,i)=>({id:i+1,name:r[0],region:r[1],area:r[2],type:r[3],price:r[4],max:r[5],rating:r[6],reviews:r[7],tags:r[8].split("|"),desc:r[9]}));
+
+const S={q:"",region:"전체",type:"전체",guests:2,maxPrice:0,sort:"rec",favOnly:false,favs:new Set()};
+try{const f=JSON.parse(localStorage.getItem("shimpyo-favs")||"[]");f.forEach(x=>S.favs.add(x));}catch(e){}
+const saveFavs=()=>{try{localStorage.setItem("shimpyo-favs",JSON.stringify([...S.favs]))}catch(e){}};
+const $=id=>document.getElementById(id);
+const won=n=>n.toLocaleString("ko-KR")+"원";
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=new Date();const tmr=new Date(today);tmr.setDate(tmr.getDate()+1);const after=new Date(today);after.setDate(after.getDate()+2);
+$("checkin").value=iso(tmr);$("checkout").value=iso(after);$("checkin").min=iso(today);$("checkout").min=iso(after);
+
+function nights(){const a=new Date($("checkin").value),b=new Date($("checkout").value);const n=Math.round((b-a)/864e5);return n>0?n:1}
+function chipGroup(el,items,key){
+  el.innerHTML="";["전체",...items].forEach(v=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=v;b.setAttribute("aria-pressed",S[key]===v);
+  b.onclick=()=>{S[key]=v;if(key==="region")$("q").value="";S.q=key==="region"?"":S.q;chipGroup(el,items,key);render()};el.appendChild(b)});
+}
+const TYPE_HUE={"호텔":200,"리조트":170,"펜션":30,"모텔":280,"게스트하우스":340,"한옥":20,"캠핑·글램핑":110};
+function art(item){ // 종류별 색 + 간단한 지붕/물결 실루엣
+  const h=TYPE_HUE[item.type]+(item.id*7)%24-12;
+  const roof=item.type==="한옥"?'<path d="M10 70 Q60 40 110 70 L100 72 L100 100 L20 100 L20 72Z" fill="rgba(255,255,255,.18)"/>'
+   :item.type==="캠핑·글램핑"?'<path d="M25 100 L60 48 L95 100Z" fill="rgba(255,255,255,.2)"/>'
+   :(item.type==="호텔"||item.type==="리조트")?'<rect x="34" y="34" width="30" height="66" fill="rgba(255,255,255,.17)"/><rect x="68" y="52" width="22" height="48" fill="rgba(255,255,255,.12)"/>'
+   :'<path d="M24 100 L24 66 L60 44 L96 66 L96 100Z" fill="rgba(255,255,255,.17)"/>';
+  const sea=item.tags.some(t=>t.includes("오션")||t.includes("한강")||t.includes("호수"))?'<path d="M0 104 Q15 98 30 104 T60 104 T90 104 T120 104 V130 H0Z" fill="rgba(255,255,255,.22)"/>':'';
+  return `<svg viewBox="0 0 120 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g${item.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h} 55% 52%)"/><stop offset="1" stop-color="hsl(${h+30} 50% 32%)"/></linearGradient></defs><rect width="120" height="130" fill="url(#g${item.id})"/><circle cx="96" cy="26" r="11" fill="rgba(255,255,255,.35)"/>${roof}${sea}</svg>`;
+}
+function filtered(){
+  const q=S.q.trim();
+  let r=DATA.filter(d=>(S.region==="전체"||d.region===S.region)&&(S.type==="전체"||d.type===S.type)&&d.max>=S.guests&&(!S.maxPrice||d.price<=S.maxPrice)&&(!S.favOnly||S.favs.has(d.id))
+    &&(!q||[d.name,d.region,d.area,d.type,...d.tags].join(" ").includes(q)));
+  const sorts={rec:(a,b)=>(b.rating*Math.log10(b.reviews+10))-(a.rating*Math.log10(a.reviews+10)),low:(a,b)=>a.price-b.price,high:(a,b)=>b.price-a.price,rate:(a,b)=>b.rating-a.rating||b.reviews-a.reviews};
+  return r.sort(sorts[S.sort]);
+}
+function place(){return S.q.trim()||(S.region!=="전체"?S.region:"국내")}
+function links(name){
+  const where=name||place();const t=S.type!=="전체"?S.type.replace("·"," "):"숙소";
+  const ci=$("checkin").value,co=$("checkout").value,g=S.guests;
+  const e=encodeURIComponent;
+  return [
+    ["네이버에서 검색",`https://search.naver.com/search.naver?query=${e(where+" "+(name?"":t))}`,true],
+    ["부킹닷컴",`https://www.booking.com/searchresults.ko.html?ss=${e(where)}&checkin=${ci}&checkout=${co}&group_adults=${g}&no_rooms=1`],
+    ["에어비앤비",`https://www.airbnb.co.kr/s/${e(where)}/homes?checkin=${ci}&checkout=${co}&adults=${g}`],
+    ["구글 호텔",`https://www.google.com/travel/search?q=${e(where+" "+t)}&hl=ko`]
+  ].map(([l,u,p])=>`<a class="ext${p?" primary":""}" href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join("");
+}
+function render(){
+  const n=nights();$("guests").textContent=S.guests+"명";$("minus").disabled=S.guests<=1;$("plus").disabled=S.guests>=10;
+  $("nightsInfo").textContent=`${n}박 · ${S.guests}명 기준으로 총 요금을 보여드려요`;
+  $("favCount").textContent=S.favs.size;$("favOnly").setAttribute("aria-pressed",S.favOnly);
+  const r=filtered();
+  $("count").innerHTML=`${S.favOnly?"찜한 숙소 ":""}<span>${r.length}</span>곳`;
+  $("list").innerHTML=r.length?r.map(d=>`
+    <div class="card" role="button" tabindex="0" data-id="${d.id}">
+      <div class="thumb">${art(d)}<span class="t" style="position:relative">${d.type}</span></div>
+      <div class="body">
+        <div class="top"><div class="name">${d.name}</div><button class="fav" type="button" data-fav="${d.id}" aria-pressed="${S.favs.has(d.id)}" aria-label="찜하기">${S.favs.has(d.id)?"♥":"♡"}</button></div>
+        <div class="meta">${d.region} ${d.area} · 최대 ${d.max}명</div>
+        <div class="rating">★ ${d.rating.toFixed(1)} <span>(${d.reviews.toLocaleString()})</span></div>
+        <div class="tags">${d.tags.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+        <div class="price"><small>1박 ${won(d.price)}</small><b>${won(d.price*n)}</b><small>${n}박</small></div>
+      </div>
+    </div>`).join(""):`<div class="empty"><b>조건에 맞는 숙소가 없어요</b>인원을 줄이거나 가격·종류 조건을 풀어보세요. 아래 실제 예약 사이트 버튼으로도 찾아볼 수 있어요.</div>`;
+  $("outLinks").innerHTML=links();
+}
+function openSheet(id){
+  const d=DATA.find(x=>x.id===id),n=nights();
+  $("sheet").innerHTML=`<div class="grab"></div>
+    <button class="iconbtn close" type="button" id="closeSheet">닫기</button>
+    <div class="hero">${art(d)}<span class="t">${d.type} · 예시 숙소</span></div>
+    <h2 id="sheetTitle">${d.name}</h2>
+    <div class="meta">${d.region} ${d.area} · <span class="rating">★ ${d.rating.toFixed(1)}</span> 리뷰 ${d.reviews.toLocaleString()}개</div>
+    <p class="desc">${d.desc}</p>
+    <div class="tags">${d.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+    <div class="facts"><div class="fact"><small>체크인</small><b>${$("checkin").value.slice(5).replace("-","/")}</b></div><div class="fact"><small>체크아웃</small><b>${$("checkout").value.slice(5).replace("-","/")}</b></div><div class="fact"><small>인원</small><b>${S.guests}명</b></div></div>
+    <div class="total"><span>${won(d.price)} × ${n}박</span><b>${won(d.price*n)}</b></div>
+    <div class="outlinks"><h3>이 지역 실제 숙소 찾기</h3><div class="linkrow">${links(d.region+" "+d.area)}</div></div>`;
+  $("sheet").hidden=false;$("scrim").hidden=false;$("closeSheet").focus();
+  $("closeSheet").onclick=closeSheet;
+}
+function closeSheet(){$("sheet").hidden=true;$("scrim").hidden=true}
+$("scrim").onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+$("list").addEventListener("click",e=>{
+  const f=e.target.closest("[data-fav]");
+  if(f){e.stopPropagation();const id=+f.dataset.fav;S.favs.has(id)?S.favs.delete(id):S.favs.add(id);saveFavs();render();return}
+  const c=e.target.closest(".card");if(c)openSheet(+c.dataset.id);
+});
+$("list").addEventListener("keydown",e=>{const c=e.target.closest(".card");if(c&&(e.key==="Enter"||e.key===" ")&&!e.target.closest("[data-fav]")){e.preventDefault();openSheet(+c.dataset.id)}});
+$("q").addEventListener("input",e=>{S.q=e.target.value;const m=REGIONS.find(r=>S.q.trim()===r);S.region=m||"전체";if(m)S.q="";chipGroup($("regionChips"),REGIONS,"region");if(m){S.q=""};render()});
+$("searchForm").addEventListener("submit",e=>{e.preventDefault();$("q").blur()});
+$("minus").onclick=()=>{S.guests=Math.max(1,S.guests-1);render()};
+$("plus").onclick=()=>{S.guests=Math.min(10,S.guests+1);render()};
+$("maxPrice").onchange=e=>{S.maxPrice=+e.target.value;render()};
+$("sort").onchange=e=>{S.sort=e.target.value;render()};
+$("favOnly").onclick=()=>{S.favOnly=!S.favOnly;render()};
+$("checkin").onchange=()=>{const a=new Date($("checkin").value);const m=new Date(a);m.setDate(m.getDate()+1);$("checkout").min=iso(m);if(new Date($("checkout").value)<=a)$("checkout").value=iso(m);render()};
+$("checkout").onchange=render;
+chipGroup($("regionChips"),REGIONS,"region");chipGroup($("typeChips"),TYPES,"type");render();
+</script>
